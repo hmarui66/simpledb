@@ -45,7 +45,7 @@ public class FileMgr {
     public synchronized void write(BlockId blk, Page p) {
         try {
             RandomAccessFile f = getFile(blk.fileName());
-            f.seek(blk.number());
+            f.seek(blk.number() * blocksize);
             f.getChannel().write(p.contents());
         } catch (IOException e) {
             throw new RuntimeException("cannot write block " + blk, e);
@@ -58,7 +58,7 @@ public class FileMgr {
         byte[] b = new byte[blocksize];
         try {
             RandomAccessFile f = getFile(blk.fileName());
-            f.seek(blk.number());
+            f.seek(blk.number() * blocksize);
             f.write(b);
         } catch (IOException e) {
             throw new RuntimeException("cannot append block " + blk, e);
@@ -69,7 +69,7 @@ public class FileMgr {
     public int length(String fileName) {
         try {
             RandomAccessFile f = getFile(fileName);
-            return (int)(f.length() / blocksize);
+            return (int) (f.length() / blocksize);
         } catch (IOException e) {
             throw new RuntimeException("cannot access " + fileName, e);
         }

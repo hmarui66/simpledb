@@ -1,13 +1,12 @@
 package file;
 
 import java.io.File;
-import java.io.IOException;
 
 public class FileTest {
     public static void main(String[] args) {
         System.out.println();
         var dir = new File("dbdir");
-        var fm = new FileMgr(dir, 500);
+        var fm = new FileMgr(dir, 400);
         var blk = new BlockId("testfile", 2);
         var p1 = new Page(fm.blocksize());
         int pos1 = 88;

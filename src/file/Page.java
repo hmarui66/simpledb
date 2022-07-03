@@ -25,6 +25,19 @@ public class Page {
         bb.putInt(offset, n);
     }
 
+    public Short getShort(int offset) {
+        return bb.getShort(offset);
+    }
+    public void setShortInt(int offset, Short n) {
+        bb.putShort(n);
+    }
+    public boolean getBoolean(int offset) {
+        return bb.get(offset) == 1;
+    }
+    public void setBoolean(int offset, boolean b) {
+        bb.put(b ? (byte)0b1 : (byte) 0b0);
+    }
+
     public byte[] getBytes(int offset) {
         bb.position(offset);
         int length = bb.getInt();
@@ -49,12 +62,13 @@ public class Page {
         setBytes(offset, b);
     }
 
+
     public static int maxLength(int strlen) {
         float bytesPerChar = CHARSET.newEncoder().maxBytesPerChar();
         return Integer.BYTES + (strlen * (int) bytesPerChar);
     }
 
-    ByteBuffer contents() {
+    public ByteBuffer contents() {
         bb.position(0);
         return bb;
     }
