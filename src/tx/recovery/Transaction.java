@@ -11,4 +11,7 @@ public class Transaction {
 
     public void unpin(BlockId blk) {
     }
+
+    public void setInt(int offset, int val) {
+    }
 }
