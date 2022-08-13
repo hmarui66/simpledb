@@ -4,7 +4,6 @@ import buffer.BufferMgr;
 import file.BlockId;
 import file.FileMgr;
 import log.LogMgr;
-import tx.BufferList;
 import tx.Transaction;
 
 import java.io.File;
@@ -41,8 +40,9 @@ public class ConcurrencyTest {
                 System.out.println("Tx A: request slock 2");
                 txA.getInt(blk2, 0);
                 System.out.println("Tx A: receive slock 2");
+                System.out.println("Tx A: try commit");
                 txA.commit();
-                System.out.println("Tx A: commit");
+                System.out.println("Tx A: committed");
             } catch (InterruptedException e) {}
         }
     }
@@ -62,8 +62,9 @@ public class ConcurrencyTest {
                 System.out.println("Tx B: request slock 1");
                 txB.getInt(blk1, 0);
                 System.out.println("Tx B: receive slock 1");
+                System.out.println("Tx B: try commit");
                 txB.commit();
-                System.out.println("Tx B: commit");
+                System.out.println("Tx B: committed");
             } catch (InterruptedException e) {}
         }
     }
@@ -84,8 +85,9 @@ public class ConcurrencyTest {
                 System.out.println("Tx C: request slock 2");
                 txC.getInt(blk2, 0);
                 System.out.println("Tx C: receive slock 2");
+                System.out.println("Tx C: try commit");
                 txC.commit();
-                System.out.println("Tx B: commit");
+                System.out.println("Tx C: committed");
             } catch (InterruptedException e) {}
         }
     }
