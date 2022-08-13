@@ -3,6 +3,7 @@ package tx.recovery;
 import file.BlockId;
 import file.Page;
 import log.LogMgr;
+import tx.Transaction;
 
 public class SetStringRecord implements LogRecord {
     private int txnum, offset;

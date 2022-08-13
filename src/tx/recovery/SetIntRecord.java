@@ -3,6 +3,7 @@ package tx.recovery;
 import file.BlockId;
 import file.Page;
 import log.LogMgr;
+import tx.Transaction;
 
 import java.util.Iterator;
 
@@ -41,7 +42,7 @@ public class SetIntRecord implements LogRecord {
     @Override
     public void undo(Transaction tx) {
         tx.pin(blk);
-        tx.setInt(offset, val);
+        tx.setInt(blk, offset, val, true);
         tx.unpin(blk);
     }
 

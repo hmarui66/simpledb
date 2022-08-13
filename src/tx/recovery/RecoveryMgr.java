@@ -4,6 +4,7 @@ import buffer.Buffer;
 import buffer.BufferMgr;
 import file.BlockId;
 import log.LogMgr;
+import tx.Transaction;
 
 import java.util.ArrayList;
 import java.util.Collection;

@@ -2,6 +2,7 @@ package tx.recovery;
 
 import file.Page;
 import log.LogMgr;
+import tx.Transaction;
 
 public class StartRecord implements LogRecord {
     private int txnum;

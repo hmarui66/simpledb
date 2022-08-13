@@ -1,6 +1,7 @@
 package tx.recovery;
 
 import file.Page;
+import tx.Transaction;
 
 public interface LogRecord {
     static final int CHECKPOINT = 0,
