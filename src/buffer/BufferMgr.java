@@ -27,7 +27,7 @@ public class BufferMgr {
                 buff.flush();
     }
 
-    public void unpin(Buffer buff) {
+    public synchronized void unpin(Buffer buff) {
         buff.unpin();
         if (!buff.isPinned()) {
             numAvailable++;
@@ -35,7 +35,7 @@ public class BufferMgr {
         }
     }
 
-    public Buffer pin(BlockId blk) {
+    public synchronized Buffer pin(BlockId blk) {
         try {
             long timestamp = System.currentTimeMillis();
             Buffer buff = tryToPin(blk);
