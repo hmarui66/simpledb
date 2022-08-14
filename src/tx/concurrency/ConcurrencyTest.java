@@ -4,6 +4,7 @@ import buffer.BufferMgr;
 import file.BlockId;
 import file.FileMgr;
 import log.LogMgr;
+import server.SimpleDB;
 import tx.Transaction;
 
 import java.io.File;
@@ -14,9 +15,10 @@ public class ConcurrencyTest {
     private static BufferMgr bm;
 
     public static void main(String[] args) {
-        fm = new FileMgr(new File("dbdir"), 400);
-        lm = new LogMgr(fm, "testfile");
-        bm = new BufferMgr(fm, lm, 3);
+        SimpleDB db = new SimpleDB("dbdir/concurrencytest", 400, 8);
+        fm = db.fileMgr();
+        lm = db.logMgr();
+        bm = db.bufferMgr();
         A a = new A();
         new Thread(a).start();
         B b = new B();

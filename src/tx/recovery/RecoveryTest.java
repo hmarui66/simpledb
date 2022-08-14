@@ -5,6 +5,7 @@ import file.BlockId;
 import file.FileMgr;
 import file.Page;
 import log.LogMgr;
+import server.SimpleDB;
 import tx.Transaction;
 
 import java.io.File;
@@ -16,9 +17,10 @@ public class RecoveryTest {
     private static BlockId blk0, blk1;
 
     public static void main(String[] args) {
-        fm = new FileMgr(new File("dbdir"), 400);
-        lm = new LogMgr(fm, "simpledb.log");
-        bm = new BufferMgr(fm, lm, 3);
+        SimpleDB db = new SimpleDB("dbdir/recoverytest", 400, 8);
+        fm = db.fileMgr();
+        lm = db.logMgr();
+        bm = db.bufferMgr();
         blk0 = new BlockId("testfile", 0);
         blk1 = new BlockId("testfile", 1);
 
