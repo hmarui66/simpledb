@@ -48,4 +48,8 @@ public class Schema {
     public int length(String fldname) {
         return info.get(fldname).length;
     }
+
+    public boolean hasField(String fldname) {
+        return fields.contains(fldname);
+    }
 }
