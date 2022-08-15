@@ -3,6 +3,7 @@ package server;
 import buffer.BufferMgr;
 import file.FileMgr;
 import log.LogMgr;
+import tx.Transaction;
 
 import java.io.File;
 
@@ -30,5 +31,9 @@ public class SimpleDB {
 
     public BufferMgr bufferMgr() {
         return bm;
+    }
+
+    public Transaction newTx() {
+        return new Transaction(fm, lm, bm);
     }
 }
