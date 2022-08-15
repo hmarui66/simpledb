@@ -3,7 +3,6 @@ package record;
 import file.Page;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 import static java.sql.Types.INTEGER;
@@ -30,6 +29,14 @@ public class Layout {
         this.slotsize = slotsize;
     }
 
+    public int offset(String fldname) {
+        return offsets.get(fldname);
+    }
+
+    public int slotSize() {
+        return slotsize;
+    }
+
     private int lengthInBytes(String fldname) {
         int fldtype = schema.type(fldname);
         if (fldtype == INTEGER) {
@@ -37,5 +44,9 @@ public class Layout {
         } else { // fldtype == VARCHAR
             return Page.maxLength(schema.length(fldname));
         }
+    }
+
+    public Schema schema() {
+        return schema;
     }
 }
