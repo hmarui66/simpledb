@@ -28,6 +28,10 @@ public class FileMgr {
                 new File(dbDirectory, filename).delete();
     }
 
+    public boolean isNew() {
+        return isNew;
+    }
+
     public int blocksize() {
         return blocksize;
     }

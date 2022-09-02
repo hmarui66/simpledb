@@ -23,6 +23,7 @@ public class ViewMgr {
     public void createView(String viewName, String viewDef, Transaction tx) {
         Layout layout = tblMgr.getLayout("viewCatalog", tx);
         TableScan ts = new TableScan(tx, "viewCatalog", layout);
+        ts.insert();
         ts.setString("viewName", viewName);
         ts.setString("viewDef", viewDef);
         ts.close();

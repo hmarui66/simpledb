@@ -54,7 +54,6 @@ public class LogMgr {
         int bytesneeded = recsize + Integer.BYTES;
         // Page の残りサイズが書き込み対象よりも多いかどうかの判定
         if (boundary - bytesneeded < Integer.BYTES) {
-            System.out.println("not enough!!!!!!");
             // 足りない場合は一旦 flush してサイズを確保
             flush();
             currentblk = appendNewBlock();
@@ -63,10 +62,8 @@ public class LogMgr {
         int recpos = boundary - bytesneeded;
         logpage.setBytes(recpos, logrec);
         logpage.setInt(0, recpos);
-        System.out.println("recpos: " + recpos + ", bytesneeded: " + bytesneeded);
         latestLSN += 1;
         return latestLSN;
-
     }
 
     private BlockId appendNewBlock() {
