@@ -30,6 +30,10 @@ public class Expression {
         return (val != null) ? val : s.getVal(fieldName);
     }
 
+    /**
+     * Determine if all the fields mentioned in this expression
+     * are contained in the specified schema.
+     */
     public boolean appliesTo(Schema sch) {
         return val != null || sch.hasField(fieldName);
     }

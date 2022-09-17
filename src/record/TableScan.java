@@ -1,9 +1,13 @@
 package record;
 
 import file.BlockId;
+import query.Constant;
+import query.UpdateScan;
 import tx.Transaction;
 
-public class TableScan {
+import static java.sql.Types.INTEGER;
+
+public class TableScan implements UpdateScan {
     private Transaction tx;
     private Layout layout;
     private RecordPage rp;
@@ -25,6 +29,14 @@ public class TableScan {
         if (rp != null) {
             tx.unpin(rp.block());
         }
+    }
+
+    @Override
+    public Constant getVal(String fieldName) {
+        if (layout.schema().type(fieldName) == INTEGER)
+            return new Constant(getInt(fieldName));
+        else
+            return new Constant(getString(fieldName));
     }
 
     public void beforeFirst() {

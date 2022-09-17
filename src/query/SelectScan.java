@@ -40,6 +40,11 @@ public class SelectScan implements UpdateScan {
         s.close();
     }
 
+    @Override
+    public Constant getVal(String fieldName) {
+        return s.getVal(fieldName);
+    }
+
     // UpdateScan methods
 
     @Override
