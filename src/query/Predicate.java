@@ -105,9 +105,9 @@ public class Predicate {
         Iterator<Term> iter = terms.iterator();
         if (!iter.hasNext())
             return "";
-        String result = iter.next().toString();
+        StringBuilder result = new StringBuilder(iter.next().toString());
         while (iter.hasNext())
-            result += " and " + iter.next().toString();
-        return result;
+            result.append(" and ").append(iter.next().toString());
+        return result.toString();
     }
 }
