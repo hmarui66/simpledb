@@ -18,4 +18,8 @@ public class CreateTableData {
     public Schema schema() {
         return sch;
     }
+
+    public Schema newSchema() {
+        return sch;
+    }
 }

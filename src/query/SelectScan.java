@@ -48,6 +48,12 @@ public class SelectScan implements UpdateScan {
     // UpdateScan methods
 
     @Override
+    public void setVal(String fieldName, Constant val) {
+        UpdateScan us = (UpdateScan) s;
+        us.setVal(fieldName, val);
+    }
+
+    @Override
     public void setInt(String fieldName, int val) {
         UpdateScan us = (UpdateScan) s;
         us.setInt(fieldName, val);

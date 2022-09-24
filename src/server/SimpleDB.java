@@ -4,6 +4,7 @@ import buffer.BufferMgr;
 import file.FileMgr;
 import log.LogMgr;
 import metadata.MetadataMgr;
+import plan.*;
 import tx.Transaction;
 
 import java.io.File;
@@ -17,6 +18,7 @@ public class SimpleDB {
     private BufferMgr bm;
     private LogMgr lm;
     private MetadataMgr mdm;
+    private Planner planner;
 
     public SimpleDB(String dirname, int blocksize, int buffsize) {
         File dbDirectory = new File(dirname);
@@ -36,6 +38,9 @@ public class SimpleDB {
             tx.recover();
         }
         mdm = new MetadataMgr(isNew, tx);
+        QueryPlanner qp = new BasicQueryPlanner(mdm);
+        UpdatePlanner up = new BasicUpdatePlanner(mdm);
+        planner = new Planner(qp, up);
         tx.commit();;
     }
 
@@ -53,5 +58,9 @@ public class SimpleDB {
 
     public Transaction newTx() {
         return new Transaction(fm, lm, bm);
+    }
+
+    public Planner planner() {
+        return planner;
     }
 }

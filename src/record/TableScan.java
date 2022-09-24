@@ -67,6 +67,14 @@ public class TableScan implements UpdateScan {
         return layout.schema().hasField(fldname);
     }
 
+    @Override
+    public void setVal(String fieldName, Constant val) {
+        if (layout.schema().type(fieldName) == INTEGER)
+            setInt(fieldName, val.asInt());
+        else
+            setString(fieldName, val.asString());
+    }
+
     public void setInt(String fldname, int val) {
         rp.setInt(currentslot, fldname, val);
     }

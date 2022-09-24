@@ -19,4 +19,8 @@ public class CreateIndexData {
     public String fieldName() {
         return fieldName;
     }
+
+    public String indexName() {
+        return idxName;
+    }
 }
