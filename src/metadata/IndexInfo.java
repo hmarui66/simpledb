@@ -1,6 +1,7 @@
 package metadata;
 
 import index.Index;
+import index.btree.BTreeIndex;
 import index.hash.HashIndex;
 import record.Layout;
 import record.Schema;
@@ -25,7 +26,8 @@ public class IndexInfo {
     }
 
     public Index open() {
-        return new HashIndex(tx, idxName, idxLayout);
+//        return new HashIndex(tx, idxName, idxLayout);
+        return new BTreeIndex(tx, idxName, idxLayout);
     }
 
     public int blocksAccessed() {

@@ -4,44 +4,75 @@ import index.Index;
 import query.Constant;
 import record.Layout;
 import record.RID;
+import record.TableScan;
 import tx.Transaction;
 
 public class HashIndex implements Index {
     public static int NUM_BUCKETS = 100;
-    public HashIndex(Transaction tx, String idxName, Layout idxLayout) {
+    private Transaction tx;
+    private String idxName;
+    private Layout layout;
+    private Constant searchKey = null;
+    private TableScan ts = null;
+
+    public HashIndex(Transaction tx, String idxName, Layout layout) {
+        this.tx = tx;
+        this.idxName = idxName;
+        this.layout = layout;
     }
 
-    public static int searchCost(int numBlocks, int rpb) {
-        return numBlocks / HashIndex.NUM_BUCKETS;
-    }
 
     @Override
     public void beforeFirst(Constant searchKey) {
-
+        close();
+        this.searchKey = searchKey;
+        int bucket = searchKey.hashCode() % NUM_BUCKETS;
+        String tblName = idxName + bucket;
+        ts = new TableScan(tx, tblName, layout);
     }
 
     @Override
     public boolean next() {
+        while (ts.next())
+            if (ts.getVal("dataVal").equals(searchKey))
+                return true;
         return false;
     }
 
     @Override
     public RID getDataRid() {
-        return null;
+        int blkNum = ts.getInt("block");
+        int id = ts.getInt("id");
+        return new RID(blkNum, id);
     }
 
     @Override
-    public void insert(Constant dataVal, RID dataRid) {
-
+    public void insert(Constant val, RID rid) {
+        beforeFirst(val);
+        ;
+        ts.insert();
+        ts.setInt("block", rid.blockNumber());
+        ts.setInt("id", rid.slot());
+        ts.setVal("dataVal", val);
     }
 
     @Override
-    public void delete(Constant dataVal, RID dataRid) {
-
+    public void delete(Constant val, RID rid) {
+        beforeFirst(val);
+        while (next())
+            if (getDataRid().equals(rid)) {
+                ts.delete();
+                return;
+            }
     }
 
     @Override
     public void close() {
+        if (ts != null)
+            ts.close();
+    }
 
+    public static int searchCost(int numBlocks, int rpb) {
+        return numBlocks / HashIndex.NUM_BUCKETS;
     }
 }

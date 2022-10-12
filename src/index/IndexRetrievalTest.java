@@ -14,9 +14,9 @@ import java.util.Map;
 
 public class IndexRetrievalTest {
     public static void main(String[] args) {
-        SimpleDB db = new SimpleDB("dbdir/studentdb");
+        SimpleDB db = new SimpleDB("dbdir/studentDb");
         Transaction tx = db.newTx();
-        MetadataMgr mdm = db.mgMgr();
+        MetadataMgr mdm = db.mdMgr();
 
         // Open a scan on the data table.
         Plan studentPlan = new TablePlan(tx, "student", mdm);
@@ -24,7 +24,7 @@ public class IndexRetrievalTest {
 
         // Open the index on MajorId
         Map<String, IndexInfo> indexes = mdm.getIndexInfo("student", tx);
-        IndexInfo ii = indexes.get("majorId");
+        IndexInfo ii = indexes.get("majorid");
         Index idx = ii.open();
 
         // Retrieve all index records having a dataVal of 20.
@@ -33,7 +33,7 @@ public class IndexRetrievalTest {
             // Use the dataRid to go to the corresponding STUDENT record.
             RID dataRid = idx.getDataRid();
             studentScan.moveToRid(dataRid);
-            System.out.println(studentScan.getString("sName"));
+            System.out.println(studentScan.getString("sname"));
         }
 
         // Close the index and the data table.

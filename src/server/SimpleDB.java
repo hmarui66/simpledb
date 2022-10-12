@@ -64,7 +64,7 @@ public class SimpleDB {
         return planner;
     }
 
-    public MetadataMgr mgMgr() {
+    public MetadataMgr mdMgr() {
         return mdm;
     }
 }
