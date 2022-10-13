@@ -5,7 +5,6 @@ import index.planner.IndexSelectPlan;
 import metadata.IndexInfo;
 import metadata.MetadataMgr;
 import plan.Plan;
-import plan.Planner;
 import plan.TablePlan;
 import query.Constant;
 import query.Scan;
@@ -22,10 +21,9 @@ public class IndexSelectTest {
         Transaction tx = db.newTx();
         MetadataMgr mdm = db.mdMgr();
 
-
         // Find the index on StudentId.
         Map<String, IndexInfo> indexes = mdm.getIndexInfo("enroll", tx);
-        IndexInfo sidIdx = indexes.get("studentId");
+        IndexInfo sidIdx = indexes.get("sid");
 
         // Get the plan for the Enroll table
         Plan enrollPlan = new TablePlan(tx, "enroll", mdm);

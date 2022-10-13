@@ -11,6 +11,7 @@ import record.RID;
 import server.SimpleDB;
 import tx.Transaction;
 
+import java.util.HashMap;
 import java.util.Map;
 
 public class CreateStudentDb {
@@ -36,38 +37,79 @@ public class CreateStudentDb {
         for (String val : students) planner.executeUpdate(s + val, tx);
         System.out.println("STUDENT records inserted.");
 
-//        s = "create table ENROLL(EId int, StudentId int, SectionId int, Grade varchar(2))";
-//        planner.executeUpdate(s, tx);
-//        System.out.println("Table ENROLL created.");
-//
-//        s = "insert into ENROLL(EId, StudentId, SectionId, Grade) values ";
-//        String[] enrolls = {"(14, 1, 13, 'A')",
-//                "(24, 1, 43, 'C' )",
-//                "(34, 2, 43, 'B+')",
-//                "(44, 4, 33, 'B' )",
-//                "(54, 4, 53, 'A' )",
-//                "(64, 6, 53, 'A' )"};
-//        for (String val : enrolls) {
-//            planner.executeUpdate(s + val, tx);
-//        }
-//        System.out.println("ENROLL records inserted.");
+        s = "create table ENROLL(EId int, SId int, SectionId int, Grade varchar(2))";
+        planner.executeUpdate(s, tx);
+        System.out.println("Table ENROLL created.");
 
-        mdm.createIndex("majorIndex", "student", "majorid", tx);
-        System.out.println("majorIndex created.");
+        s = "insert into ENROLL(EId, SId, SectionId, Grade) values ";
+        String[] enrolls = {"(14, 1, 13, 'A')",
+                "(24, 1, 43, 'C' )",
+                "(34, 2, 43, 'B+')",
+                "(44, 4, 33, 'B' )",
+                "(54, 4, 53, 'A' )",
+                "(64, 6, 53, 'A' )"};
+        for (String val : enrolls) {
+            planner.executeUpdate(s + val, tx);
+        }
+        System.out.println("ENROLL records inserted.");
+
+        mdm.createIndex("studentSidIndex", "student", "sid", tx);
+        System.out.println("studentSidIndex created.");
+        mdm.createIndex("studentMajorIndex", "student", "majorid", tx);
+        System.out.println("studentMajorIndex created.");
+        mdm.createIndex("enrollSidIndex", "enroll", "sid", tx);
+        System.out.println("enrollSidIndex created.");
+
+        insertStudentIndex(tx, mdm);
+        insertEnrollIndex(tx, mdm);
+
+        tx.commit();
+    }
+
+    private static void insertStudentIndex(Transaction tx, MetadataMgr mdm) {
+        Map<String,Index> indexes = new HashMap<>();
         Map<String, IndexInfo> idxInfo = mdm.getIndexInfo("student", tx);
-        Index idx = idxInfo.get("majorid").open();
+
+        for (String fieldName : idxInfo.keySet()) {
+            Index idx = idxInfo.get(fieldName).open();
+            indexes.put(fieldName, idx);
+        }
 
         Plan studentPlan = new TablePlan(tx, "student", mdm);
         UpdateScan studentScan = (UpdateScan) studentPlan.open();
 
         studentScan.beforeFirst();
         while (studentScan.next()) {
-            Constant val = studentScan.getVal("majorid");
             RID rid = studentScan.getRid();
-            idx.insert(val, rid);
+            for (String fieldName : indexes.keySet()) {
+                Constant val = studentScan.getVal(fieldName);
+                Index idx = indexes.get(fieldName);
+                idx.insert(val, rid);
+            }
         }
-        System.out.println("majorIndex inserted.");
+        System.out.println("Student Index inserted.");
+    }
+    private static void insertEnrollIndex(Transaction tx, MetadataMgr mdm) {
+        Map<String,Index> indexes = new HashMap<>();
+        Map<String, IndexInfo> idxInfo = mdm.getIndexInfo("enroll", tx);
 
-        tx.commit();
+        for (String fieldName : idxInfo.keySet()) {
+            Index idx = idxInfo.get(fieldName).open();
+            indexes.put(fieldName, idx);
+        }
+
+        Plan studentPlan = new TablePlan(tx, "enroll", mdm);
+        UpdateScan enrollScan = (UpdateScan) studentPlan.open();
+
+        enrollScan.beforeFirst();
+        while (enrollScan.next()) {
+            RID rid = enrollScan.getRid();
+            for (String fieldName : indexes.keySet()) {
+                Constant val = enrollScan.getVal(fieldName);
+                Index idx = indexes.get(fieldName);
+                idx.insert(val, rid);
+            }
+        }
+        System.out.println("Enroll Index inserted.");
     }
 }

@@ -8,8 +8,6 @@ import query.Scan;
 import record.Schema;
 import record.TableScan;
 
-import java.nio.channels.SelectableChannel;
-
 public class IndexJoinPlan implements Plan {
     private Plan p1, p2;
     private IndexInfo ii;
