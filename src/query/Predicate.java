@@ -61,7 +61,7 @@ public class Predicate {
 
     /**
      * Return the sub-predicate consisting of terms that apply
-     * to the union of the tow specified schemas,
+     * to the union of the two specified schemas,
      * but not to either schema separately.
      */
     public Predicate joinSubPred(Schema sch1, Schema sch2) {

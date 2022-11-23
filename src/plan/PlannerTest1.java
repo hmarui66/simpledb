@@ -18,6 +18,7 @@ public class PlannerTest1 {
             int a = (int) Math.round(Math.random() * 50);
             String b = "rec" + a + "(idx=" + i + ")";
             cmd = "insert into T1(A, B) values(" + a + ", '" + b + "')";
+            System.out.println(cmd);
             planner.executeUpdate(cmd, tx);
         }
 
