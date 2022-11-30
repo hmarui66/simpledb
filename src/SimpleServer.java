@@ -8,7 +8,7 @@ import java.rmi.registry.Registry;
 
 public class SimpleServer {
     public static void main(String[] args) throws RemoteException {
-        String dirName = (args.length == 0) ? "studentDb" : args[0];
+        String dirName = (args.length == 0) ? "dbdir/studentDb" : args[0];
         SimpleDB db = new SimpleDB(dirName);
 
         Registry reg = LocateRegistry.createRegistry(1099);
