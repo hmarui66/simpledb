@@ -11,7 +11,7 @@ public class SimpleIJ {
         String s = sc.nextLine();
         Driver d = (s.contains("//")) ? new NetworkDriver() : new EmbeddedDriver();
 
-        try (Connection conn = d.connect(s, null); Statement stmt = conn.createStatement()) {
+        try (Connection conn = d.connect("dbdir/"+s, null); Statement stmt = conn.createStatement()) {
             System.out.print("\nSQL> ");
             while (sc.hasNextLine()) {
                 // process one line of input
