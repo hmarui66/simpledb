@@ -1,7 +1,7 @@
 # simpledb
 
 A toy RDBMS implemented in Java.
-Based on SimpleDB of "Database Design and Implementation".
+Based on SimpleDB of ["Database Design and Implementation"](https://link.springer.com/book/10.1007/978-3-030-33836-7).
 Original code of SimpleDB is [here](http://www.cs.bc.edu/~sciore/simpledb/).
 
 ## how it works
