@@ -9,4 +9,3 @@
  */
 
 rootProject.name = "simpledb"
-include("app")
