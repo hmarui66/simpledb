@@ -10,6 +10,7 @@
 plugins {
     // Apply the org.jetbrains.kotlin.jvm Plugin to add support for Kotlin.
     id("org.jetbrains.kotlin.jvm") version "1.7.10"
+    id("io.gitlab.arturbosch.detekt") version "1.22.0"
 
     // Apply the application plugin to add support for building a CLI application in Java.
     application
@@ -23,6 +24,7 @@ repositories {
 dependencies {
     // This dependency is used by the application.
     implementation("com.google.guava:guava:31.1-jre")
+    detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:1.22.0")
 }
 
 testing {
@@ -43,4 +45,11 @@ testing {
 application {
     // Define the main class for the application.
     mainClass.set("simpledb.SimpleIJKt")
+}
+
+detekt {
+    toolVersion = "1.22.0"
+    buildUponDefaultConfig = true
+    autoCorrect = true
+    source = files("src/main/kotlin", "src/test/kotlin")
 }

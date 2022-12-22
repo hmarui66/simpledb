@@ -3,7 +3,6 @@
  */
 package simpledb
 
-import simpledb.file.Page
 import simpledb.jdbc.embedded.EmbeddedDriver
 import simpledb.jdbc.network.NetworkDriver
 import java.sql.Driver
@@ -12,6 +11,7 @@ import java.sql.Statement
 import java.sql.Types
 import java.util.Scanner
 
+@Suppress("NestedBlockDepth", "PrintStackTrace")
 class SimpleIJ {
     val greeting: String
         get() {
@@ -21,7 +21,6 @@ class SimpleIJ {
     fun start() {
         val sc = Scanner(System.`in`)
         println("Connect> ")
-        val p = Page(1)
         val s = sc.nextLine()
         val d: Driver = if (s.contains("//")) NetworkDriver() else EmbeddedDriver()
         try {
@@ -31,13 +30,19 @@ class SimpleIJ {
                     while (sc.hasNextLine()) {
                         // process one line of input
                         val cmd = sc.nextLine().trim { it <= ' ' }
-                        if (cmd.startsWith("exit")) break else if (cmd.startsWith("select")) doQuery(
-                            stmt,
-                            cmd
-                        ) else doUpdate(
-                            stmt,
-                            cmd
-                        )
+                        if (cmd.startsWith("exit")) {
+                            break
+                        } else if (cmd.startsWith("select")) {
+                            doQuery(
+                                stmt,
+                                cmd
+                            )
+                        } else {
+                            doUpdate(
+                                stmt,
+                                cmd
+                            )
+                        }
                         print("\nSQL> ")
                     }
                 }
@@ -46,7 +51,6 @@ class SimpleIJ {
             e.printStackTrace()
         }
         sc.close()
-
     }
 
     private fun doQuery(stmt: Statement, cmd: String) {
@@ -103,4 +107,3 @@ class SimpleIJ {
 fun main() {
     SimpleIJ().start()
 }
-
