@@ -25,6 +25,7 @@ class TransactionImpl(private val fm: FileMgr, lm: LogMgr?, private val bm: Buff
         recoveryMgr.commit()
         concurMgr.release()
         myBuffers.unpinAll()
+        // TODO: unlock row shared & exclusive lock
         println("transaction $txNum committed")
     }
 
@@ -32,6 +33,7 @@ class TransactionImpl(private val fm: FileMgr, lm: LogMgr?, private val bm: Buff
         recoveryMgr.rollback()
         concurMgr.release()
         myBuffers.unpinAll()
+        // TODO: unlock row shared & exclusive lock
         println("transaction $txNum roll back")
     }
 
@@ -49,19 +51,19 @@ class TransactionImpl(private val fm: FileMgr, lm: LogMgr?, private val bm: Buff
     }
 
     override fun getInt(blk: BlockId, offset: Int): Int {
-        concurMgr.sLock(blk)
+//        concurMgr.sLock(blk)
         val buff = myBuffers.getBuffer(blk)
         return buff.contents().getInt(offset)
     }
 
     override fun getString(blk: BlockId, offset: Int): String {
-        concurMgr.sLock(blk)
+//        concurMgr.sLock(blk)
         val buff = myBuffers.getBuffer(blk)
         return buff.contents().getString(offset)
     }
 
     override fun setInt(blk: BlockId, offset: Int, `val`: Int, okToLog: Boolean) {
-        concurMgr.xLock(blk)
+//        concurMgr.xLock(blk)
         val buff = myBuffers.getBuffer(blk)
         var lsn = -1
         if (okToLog) lsn = recoveryMgr.setInt(buff, offset, `val`)
@@ -71,7 +73,7 @@ class TransactionImpl(private val fm: FileMgr, lm: LogMgr?, private val bm: Buff
     }
 
     override fun setString(blk: BlockId, offset: Int, `val`: String, okToLog: Boolean) {
-        concurMgr.xLock(blk)
+//        concurMgr.xLock(blk)
         val buff = myBuffers.getBuffer(blk)
         var lsn = -1
         if (okToLog) lsn = recoveryMgr.setString(buff, offset, `val`)
@@ -101,6 +103,25 @@ class TransactionImpl(private val fm: FileMgr, lm: LogMgr?, private val bm: Buff
     }
 
     fun lockShared(blk: BlockId, offset: Int) {
+        TODO("not implemented")
+    }
+
+    fun lockExclusive(blk: BlockId, offset: Int) {
+        TODO("not implemented")
+    }
+
+    fun rLatchPage(blk: BlockId) {
+        TODO("not implemented")
+    }
+    fun rUnlatchPage(blk: BlockId) {
+        TODO("not implemented")
+    }
+
+    fun wLatchPage(blk: BlockId) {
+        TODO("not implemented")
+    }
+
+    fun wUnlatchPage(blk: BlockId) {
         TODO("not implemented")
     }
 
