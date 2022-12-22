@@ -5,11 +5,11 @@ import simpledb.query.Constant
 import simpledb.query.UpdateScan
 import simpledb.record.Layout
 import simpledb.record.RID
-import simpledb.tx.Transaction
+import simpledb.tx.rowlock.TransactionImpl
 import java.sql.Types
 
 class TableScan(
-    private val tx: Transaction,
+    private val tx: TransactionImpl,
     tableName: String,
     private val layout: Layout
 ) : UpdateScan {

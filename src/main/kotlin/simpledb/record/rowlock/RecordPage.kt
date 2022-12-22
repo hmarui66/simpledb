@@ -2,30 +2,30 @@ package simpledb.record.rowlock
 
 import simpledb.file.BlockId
 import simpledb.record.Layout
-import simpledb.tx.Transaction
+import simpledb.tx.rowlock.TransactionImpl
 import java.sql.Types
 
-class RecordPage(private val tx: Transaction, private val blk: BlockId, private val layout: Layout) {
+class RecordPage(private val tx: TransactionImpl, private val blk: BlockId, private val layout: Layout) {
     init {
         tx.pin(blk)
     }
 
-    fun getInt(slot: Int, fldName: String?): Int {
+    fun getInt(slot: Int, fldName: String): Int {
         val fldPos = offset(slot) + layout.offset(fldName)
         return tx.getInt(blk, fldPos)
     }
 
-    fun getString(slot: Int, fldName: String?): String {
+    fun getString(slot: Int, fldName: String): String {
         val fldPos = offset(slot) + layout.offset(fldName)
         return tx.getString(blk, fldPos)
     }
 
-    fun setInt(slot: Int, fldName: String?, value: Int) {
+    fun setInt(slot: Int, fldName: String, value: Int) {
         val fldPos = offset(slot) + layout.offset(fldName)
         tx.setInt(blk, fldPos, value, true)
     }
 
-    fun setString(slot: Int, fldName: String?, value: String?) {
+    fun setString(slot: Int, fldName: String, value: String) {
         val fldPos = offset(slot) + layout.offset(fldName)
         tx.setString(blk, fldPos, value, true)
     }
@@ -73,9 +73,12 @@ class RecordPage(private val tx: Transaction, private val blk: BlockId, private 
         var slot = orgSlot
         slot++
         while (isValidSlot(slot)) {
+            // TODO: latch page
             if (tx.getInt(blk, offset(slot)) == used) {
+                tx.lockShared(blk, offset(slot))
                 return slot
             }
+            // TODO: unlatch page
             slot++
         }
         return -1
