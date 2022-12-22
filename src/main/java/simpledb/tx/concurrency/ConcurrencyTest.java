@@ -6,6 +6,7 @@ import simpledb.file.FileMgr;
 import simpledb.log.LogMgr;
 import simpledb.server.SimpleDB;
 import simpledb.tx.Transaction;
+import simpledb.tx.pagelock.TransactionImpl;
 
 public class ConcurrencyTest {
     private static FileMgr fm;
@@ -28,7 +29,7 @@ public class ConcurrencyTest {
     static class A implements Runnable {
         public void run() {
             try {
-                Transaction txA = new Transaction(fm, lm, bm);
+                Transaction txA = new TransactionImpl(fm, lm, bm);
                 BlockId blk1 = new BlockId("testfile", 1);
                 BlockId blk2 = new BlockId("testfile", 2);
                 txA.pin(blk1);
@@ -50,7 +51,7 @@ public class ConcurrencyTest {
     static class B implements Runnable {
         public void run() {
             try {
-                Transaction txB = new Transaction(fm, lm, bm);
+                Transaction txB = new TransactionImpl(fm, lm, bm);
                 BlockId blk1 = new BlockId("testfile", 1);
                 BlockId blk2 = new BlockId("testfile", 2);
                 txB.pin(blk1);
@@ -72,7 +73,7 @@ public class ConcurrencyTest {
     static class C implements Runnable {
         public void run() {
             try {
-                Transaction txC = new Transaction(fm, lm, bm);
+                Transaction txC = new TransactionImpl(fm, lm, bm);
                 BlockId blk1 = new BlockId("testfile", 1);
                 BlockId blk2 = new BlockId("testfile", 2);
                 txC.pin(blk1);

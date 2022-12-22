@@ -7,6 +7,7 @@ import simpledb.file.Page;
 import simpledb.log.LogMgr;
 import simpledb.server.SimpleDB;
 import simpledb.tx.Transaction;
+import simpledb.tx.pagelock.TransactionImpl;
 
 public class RecoveryTest {
     public static FileMgr fm;
@@ -31,8 +32,8 @@ public class RecoveryTest {
     }
 
     private static void initialize() {
-        Transaction tx1 = new Transaction(fm, lm, bm);
-        Transaction tx2 = new Transaction(fm, lm, bm);
+        Transaction tx1 = new TransactionImpl(fm, lm, bm);
+        Transaction tx2 = new TransactionImpl(fm, lm, bm);
         tx1.pin(blk0);
         tx2.pin(blk1);
         int pos = 0;
@@ -49,8 +50,8 @@ public class RecoveryTest {
     }
 
     private static void modify() {
-        Transaction tx3 = new Transaction(fm, lm, bm);
-        Transaction tx4 = new Transaction(fm, lm, bm);
+        Transaction tx3 = new TransactionImpl(fm, lm, bm);
+        Transaction tx4 = new TransactionImpl(fm, lm, bm);
         tx3.pin(blk0);
         tx4.pin(blk1);
         int pos = 0;
@@ -72,7 +73,7 @@ public class RecoveryTest {
     }
 
     private static void recover() {
-        Transaction tx = new Transaction(fm, lm, bm);
+        Transaction tx = new TransactionImpl(fm, lm, bm);
         tx.recover();
         printValues("After recovery:");
     }
