@@ -1,6 +1,7 @@
 package simpledb.tx.concurrency.rowlock
 
 import simpledb.file.BlockId
+import simpledb.record.RID
 import simpledb.tx.concurrency.LockTable
 
 class ConcurrencyMgr {
@@ -30,7 +31,33 @@ class ConcurrencyMgr {
         return locktype != null && locktype == "X"
     }
 
+    fun rLatchPage(blk: BlockId) {
+        blockLatch.rLatch(blk)
+    }
+
+    fun rUnlatchPage(blk: BlockId) {
+        blockLatch.rUnlatch(blk)
+    }
+
+    fun wLatchPage(blk: BlockId) {
+        blockLatch.wLatch(blk)
+    }
+
+    fun wUnlatchPage(blk: BlockId) {
+        blockLatch.wUnlatch(blk)
+
+    }
+
+    fun sLock(rid: RID) {
+        TODO("Not yet implemented")
+    }
+
+    fun xLock(rid: RID) {
+        TODO("Not yet implemented")
+    }
+
     companion object {
         private val locktbl = LockTable()
+        private val blockLatch = BlockLatch()
     }
 }

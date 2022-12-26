@@ -4,6 +4,7 @@ import simpledb.buffer.BufferMgr
 import simpledb.file.BlockId
 import simpledb.file.FileMgr
 import simpledb.log.LogMgr
+import simpledb.record.RID
 import simpledb.tx.BufferList
 import simpledb.tx.Transaction
 import simpledb.tx.concurrency.rowlock.ConcurrencyMgr
@@ -102,27 +103,32 @@ class TransactionImpl(private val fm: FileMgr, lm: LogMgr?, private val bm: Buff
         return bm.available()
     }
 
-    fun lockShared(blk: BlockId, offset: Int) {
-        TODO("not implemented")
+    fun lockShared(blk: BlockId, slot: Int) {
+        concurMgr.sLock(getRid(blk, slot))
     }
 
-    fun lockExclusive(blk: BlockId, offset: Int) {
-        TODO("not implemented")
+    fun lockExclusive(blk: BlockId, slot: Int) {
+        concurMgr.xLock(getRid(blk, slot))
     }
 
     fun rLatchPage(blk: BlockId) {
-        TODO("not implemented")
+        concurMgr.rLatchPage(blk)
     }
+
     fun rUnlatchPage(blk: BlockId) {
-        TODO("not implemented")
+        concurMgr.rUnlatchPage(blk)
     }
 
     fun wLatchPage(blk: BlockId) {
-        TODO("not implemented")
+        concurMgr.wLatchPage(blk)
     }
 
     fun wUnlatchPage(blk: BlockId) {
-        TODO("not implemented")
+        concurMgr.wUnlatchPage(blk)
+    }
+
+    private fun getRid(blk: BlockId, slot: Int): RID {
+        return RID(blk.number(), slot);
     }
 
     companion object {
