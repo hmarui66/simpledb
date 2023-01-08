@@ -2,62 +2,54 @@ package simpledb.tx.concurrency.rowlock
 
 import simpledb.file.BlockId
 import simpledb.record.RID
-import simpledb.tx.concurrency.LockTable
+import simpledb.tx.rowlock.TransactionImpl
+import simpledb.tx.concurrency.rowlock.LockTable as LockTableRowLock
 
 class ConcurrencyMgr {
-    private val locks: MutableMap<BlockId, String?> = HashMap()
-    fun sLock(blk: BlockId) {
-        if (locks[blk] == null) {
-            locktbl.sLock(blk)
-            locks[blk] = "S"
+    private val locks: MutableMap<BlockId, String> = mutableMapOf()
+    fun release(tx: TransactionImpl) {
+        for ((blk, mode) in locks) {
+            if (mode == "S") blockLatch.rUnlatch(blk)
+            else blockLatch.wUnlatch(blk)
         }
-    }
-
-    fun xLock(blk: BlockId) {
-        if (!hasXLock(blk)) {
-            sLock(blk)
-            locktbl.xLock(blk)
-            locks[blk] = "X"
-        }
-    }
-
-    fun release() {
-        for (blk in locks.keys) locktbl.unlock(blk)
         locks.clear()
-    }
-
-    private fun hasXLock(blk: BlockId): Boolean {
-        val locktype = locks[blk]
-        return locktype != null && locktype == "X"
+        lockTblRowLock.unlock(tx, tx.sharedLockIRIDs + tx.exclusiveLockRIDs)
     }
 
     fun rLatchPage(blk: BlockId) {
         blockLatch.rLatch(blk)
+        locks[blk] = "S"
     }
 
     fun rUnlatchPage(blk: BlockId) {
-        blockLatch.rUnlatch(blk)
+        if (locks[blk] == "S") {
+            blockLatch.rUnlatch(blk)
+            locks.remove(blk)
+        }
     }
 
     fun wLatchPage(blk: BlockId) {
         blockLatch.wLatch(blk)
+        locks[blk] = "X"
     }
 
     fun wUnlatchPage(blk: BlockId) {
-        blockLatch.wUnlatch(blk)
-
+        if (locks[blk] == "X") {
+            blockLatch.wUnlatch(blk)
+            locks.remove(blk)
+        }
     }
 
-    fun sLock(rid: RID) {
-        TODO("Not yet implemented")
+    fun lockExclusive(tx: TransactionImpl, rid: RID) {
+        lockTblRowLock.lockExclusive(tx, rid)
     }
 
-    fun xLock(rid: RID) {
-        TODO("Not yet implemented")
+    fun lockShared(tx: TransactionImpl, rid: RID) {
+        lockTblRowLock.lockShared(tx, rid)
     }
 
     companion object {
-        private val locktbl = LockTable()
+        private val lockTblRowLock = LockTableRowLock()
         private val blockLatch = BlockLatch()
     }
 }

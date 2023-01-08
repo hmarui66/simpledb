@@ -13,8 +13,15 @@ import simpledb.tx.recovery.RecoveryMgr
 class TransactionImpl(private val fm: FileMgr, lm: LogMgr?, private val bm: BufferMgr) : Transaction {
     private val recoveryMgr: RecoveryMgr
     private val concurMgr: ConcurrencyMgr
-    private val txNum: Int = nextTxNumber()
+    val txNum: Int = nextTxNumber()
     private val myBuffers: BufferList
+    private val mutSharedLockRIDs = mutableListOf<RID>()
+    private val mutExclusiveLockRIDs = mutableListOf<RID>()
+
+    val sharedLockIRIDs : List<RID>
+        get() = mutSharedLockRIDs.toList()
+    val exclusiveLockRIDs : List<RID>
+        get() = mutExclusiveLockRIDs.toList()
 
     init {
         recoveryMgr = RecoveryMgr(this, txNum, lm, bm)
@@ -24,17 +31,15 @@ class TransactionImpl(private val fm: FileMgr, lm: LogMgr?, private val bm: Buff
 
     override fun commit() {
         recoveryMgr.commit()
-        concurMgr.release()
+        concurMgr.release(this)
         myBuffers.unpinAll()
-        // TODO: unlock row shared & exclusive lock
         println("transaction $txNum committed")
     }
 
     override fun rollback() {
         recoveryMgr.rollback()
-        concurMgr.release()
+        concurMgr.release(this)
         myBuffers.unpinAll()
-        // TODO: unlock row shared & exclusive lock
         println("transaction $txNum roll back")
     }
 
@@ -52,19 +57,16 @@ class TransactionImpl(private val fm: FileMgr, lm: LogMgr?, private val bm: Buff
     }
 
     override fun getInt(blk: BlockId, offset: Int): Int {
-//        concurMgr.sLock(blk)
         val buff = myBuffers.getBuffer(blk)
         return buff.contents().getInt(offset)
     }
 
     override fun getString(blk: BlockId, offset: Int): String {
-//        concurMgr.sLock(blk)
         val buff = myBuffers.getBuffer(blk)
         return buff.contents().getString(offset)
     }
 
     override fun setInt(blk: BlockId, offset: Int, `val`: Int, okToLog: Boolean) {
-//        concurMgr.xLock(blk)
         val buff = myBuffers.getBuffer(blk)
         var lsn = -1
         if (okToLog) lsn = recoveryMgr.setInt(buff, offset, `val`)
@@ -74,7 +76,6 @@ class TransactionImpl(private val fm: FileMgr, lm: LogMgr?, private val bm: Buff
     }
 
     override fun setString(blk: BlockId, offset: Int, `val`: String, okToLog: Boolean) {
-//        concurMgr.xLock(blk)
         val buff = myBuffers.getBuffer(blk)
         var lsn = -1
         if (okToLog) lsn = recoveryMgr.setString(buff, offset, `val`)
@@ -85,14 +86,22 @@ class TransactionImpl(private val fm: FileMgr, lm: LogMgr?, private val bm: Buff
 
     override fun size(filename: String): Int {
         val dummyBlk = BlockId(filename, END_OF_FILE)
-        concurMgr.sLock(dummyBlk)
-        return fm.length(filename)
+        concurMgr.rLatchPage(dummyBlk)
+        try {
+            return fm.length(filename)
+        } finally {
+            concurMgr.rUnlatchPage(dummyBlk)
+        }
     }
 
     override fun append(filename: String): BlockId {
         val dummyBlk = BlockId(filename, END_OF_FILE)
-        concurMgr.xLock(dummyBlk)
-        return fm.append(filename)
+        concurMgr.wLatchPage(dummyBlk)
+        try {
+            return fm.append(filename)
+        } finally {
+            concurMgr.wUnlatchPage(dummyBlk)
+        }
     }
 
     override fun blockSize(): Int {
@@ -104,11 +113,11 @@ class TransactionImpl(private val fm: FileMgr, lm: LogMgr?, private val bm: Buff
     }
 
     fun lockShared(blk: BlockId, slot: Int) {
-        concurMgr.sLock(getRid(blk, slot))
+        concurMgr.lockShared(this, getRid(blk, slot))
     }
 
     fun lockExclusive(blk: BlockId, slot: Int) {
-        concurMgr.xLock(getRid(blk, slot))
+        concurMgr.lockExclusive(this, getRid(blk, slot))
     }
 
     fun rLatchPage(blk: BlockId) {
@@ -128,7 +137,15 @@ class TransactionImpl(private val fm: FileMgr, lm: LogMgr?, private val bm: Buff
     }
 
     private fun getRid(blk: BlockId, slot: Int): RID {
-        return RID(blk.number(), slot);
+        return RID(blk.number(), slot)
+    }
+
+    fun addSharedLockRID(rid: RID) {
+        mutSharedLockRIDs.add(rid)
+    }
+
+    fun addExclusiveLockRID(rid: RID) {
+        mutExclusiveLockRIDs.add(rid)
     }
 
     companion object {

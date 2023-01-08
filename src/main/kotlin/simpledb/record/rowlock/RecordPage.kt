@@ -22,18 +22,24 @@ class RecordPage(private val tx: TransactionImpl, private val blk: BlockId, priv
 
     fun setInt(slot: Int, fldName: String, value: Int) {
         tx.wLatchPage(blk)
-        tx.lockExclusive(blk, slot)
-        val fldPos = offset(slot) + layout.offset(fldName)
-        tx.setInt(blk, fldPos, value, true)
-        tx.wUnlatchPage(blk)
+        try {
+            tx.lockExclusive(blk, slot)
+            val fldPos = offset(slot) + layout.offset(fldName)
+            tx.setInt(blk, fldPos, value, true)
+        } finally {
+            tx.wUnlatchPage(blk)
+        }
     }
 
     fun setString(slot: Int, fldName: String, value: String) {
         tx.wLatchPage(blk)
-        tx.lockExclusive(blk, slot)
-        val fldPos = offset(slot) + layout.offset(fldName)
-        tx.setString(blk, fldPos, value, true)
-        tx.wUnlatchPage(blk)
+        try {
+            tx.lockExclusive(blk, slot)
+            val fldPos = offset(slot) + layout.offset(fldName)
+            tx.setString(blk, fldPos, value, true)
+        } finally {
+            tx.wUnlatchPage(blk)
+        }
     }
 
     fun delete(slot: Int) {
@@ -80,12 +86,14 @@ class RecordPage(private val tx: TransactionImpl, private val blk: BlockId, priv
         slot++
         while (isValidSlot(slot)) {
             tx.rLatchPage(blk)
-            if (tx.getInt(blk, offset(slot)) == used) {
-                tx.lockShared(blk, slot)
+            try {
+                if (tx.getInt(blk, offset(slot)) == used) {
+                    tx.lockShared(blk, slot)
+                    return slot
+                }
+            } finally {
                 tx.rUnlatchPage(blk)
-                return slot
             }
-            tx.rUnlatchPage(blk)
             slot++
         }
         return -1
