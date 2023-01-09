@@ -112,13 +112,11 @@ class TransactionImpl(private val fm: FileMgr, lm: LogMgr?, private val bm: Buff
         return bm.available()
     }
 
-    fun lockShared(blk: BlockId, slot: Int) {
+    fun lockShared(blk: BlockId, slot: Int): Boolean =
         concurMgr.lockShared(this, getRid(blk, slot))
-    }
 
-    fun lockExclusive(blk: BlockId, slot: Int) {
+    fun lockExclusive(blk: BlockId, slot: Int): Boolean =
         concurMgr.lockExclusive(this, getRid(blk, slot))
-    }
 
     fun rLatchPage(blk: BlockId) {
         concurMgr.rLatchPage(blk)

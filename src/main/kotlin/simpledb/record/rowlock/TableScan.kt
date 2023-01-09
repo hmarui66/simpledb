@@ -2,7 +2,6 @@ package simpledb.record.rowlock
 
 import simpledb.file.BlockId
 import simpledb.query.Constant
-import simpledb.query.UpdateScan
 import simpledb.record.Layout
 import simpledb.record.RID
 import simpledb.tx.rowlock.TransactionImpl
@@ -12,7 +11,7 @@ class TableScan(
     private val tx: TransactionImpl,
     tableName: String,
     private val layout: Layout
-) : UpdateScan {
+)  {
     private var rp: RecordPage? = null
     private val filename: String
     private var currentSlot = 0
@@ -26,13 +25,13 @@ class TableScan(
         }
     }
 
-    override fun close() {
+    fun close() {
         if (rp != null) {
             tx.unpin(rp!!.block())
         }
     }
 
-    override fun getVal(fieldName: String): Constant {
+    fun getVal(fieldName: String): Constant {
         return if (layout.schema()
             .type(fieldName) == Types.INTEGER
         ) {
@@ -42,11 +41,11 @@ class TableScan(
         }
     }
 
-    override fun beforeFirst() {
+    fun beforeFirst() {
         moveToBlock(0)
     }
 
-    override fun next(): Boolean {
+    fun next(): Boolean {
         currentSlot = rp!!.nextAfter(currentSlot)
         while (currentSlot < 0) {
             if (atLastBlock()) {
@@ -58,19 +57,19 @@ class TableScan(
         return true
     }
 
-    override fun getInt(fldname: String): Int {
+    fun getInt(fldname: String): Int {
         return rp!!.getInt(currentSlot, fldname)
     }
 
-    override fun getString(fldname: String): String {
+    fun getString(fldname: String): String {
         return rp!!.getString(currentSlot, fldname)
     }
 
-    override fun hasField(fldname: String): Boolean {
+    fun hasField(fldname: String): Boolean {
         return layout.schema().hasField(fldname)
     }
 
-    override fun setVal(fieldName: String, value: Constant) {
+    fun setVal(fieldName: String, value: Constant) {
         if (layout.schema().type(fieldName) == Types.INTEGER) {
             setInt(fieldName, value.asInt())
         } else {
@@ -81,15 +80,13 @@ class TableScan(
         }
     }
 
-    override fun setInt(fldname: String, value: Int) {
+    fun setInt(fldname: String, value: Int): Boolean =
         rp!!.setInt(currentSlot, fldname, value)
-    }
 
-    override fun setString(fldname: String, value: String) {
+    fun setString(fldname: String, value: String): Boolean =
         rp!!.setString(currentSlot, fldname, value)
-    }
 
-    override fun insert() {
+    fun insert() {
         currentSlot = rp!!.insertAfter(currentSlot)
         while (currentSlot < 0) {
             if (atLastBlock()) {
@@ -101,18 +98,18 @@ class TableScan(
         }
     }
 
-    override fun delete() {
+    fun delete() {
         rp!!.delete(currentSlot)
     }
 
-    override fun moveToRid(rid: RID) {
+    fun moveToRid(rid: RID) {
         close()
         val blk = BlockId(filename, rid.blockNumber())
         rp = RecordPage(tx, blk, layout)
         currentSlot = rid.slot()
     }
 
-    override fun getRid(): RID {
+    fun getRid(): RID {
         return RID(rp!!.block().number(), currentSlot)
     }
 

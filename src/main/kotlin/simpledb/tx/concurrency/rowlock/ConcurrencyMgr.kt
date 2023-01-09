@@ -40,13 +40,11 @@ class ConcurrencyMgr {
         }
     }
 
-    fun lockExclusive(tx: TransactionImpl, rid: RID) {
+    fun lockExclusive(tx: TransactionImpl, rid: RID): Boolean =
         lockTblRowLock.lockExclusive(tx, rid)
-    }
 
-    fun lockShared(tx: TransactionImpl, rid: RID) {
+    fun lockShared(tx: TransactionImpl, rid: RID): Boolean =
         lockTblRowLock.lockShared(tx, rid)
-    }
 
     companion object {
         private val lockTblRowLock = LockTableRowLock()
