@@ -13,7 +13,7 @@ class ConcurrencyMgr {
             else blockLatch.wUnlatch(blk)
         }
         locks.clear()
-        lockTblRowLock.unlock(tx, tx.sharedLockIRIDs + tx.exclusiveLockRIDs)
+        lockTblRowLock.unlock(tx, tx.sharedLockRIDs + tx.exclusiveLockRIDs)
     }
 
     fun rLatchPage(blk: BlockId) {

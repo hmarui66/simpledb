@@ -18,7 +18,7 @@ class TransactionImpl(private val fm: FileMgr, lm: LogMgr?, private val bm: Buff
     private val mutSharedLockRIDs = mutableListOf<RID>()
     private val mutExclusiveLockRIDs = mutableListOf<RID>()
 
-    val sharedLockIRIDs : List<RID>
+    val sharedLockRIDs : List<RID>
         get() = mutSharedLockRIDs.toList()
     val exclusiveLockRIDs : List<RID>
         get() = mutExclusiveLockRIDs.toList()

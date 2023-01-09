@@ -6,21 +6,28 @@ import java.util.concurrent.locks.ReentrantLock
 
 class LockTable {
     private val lock = ReentrantLock()
-    private val exclusiveLockTable: MutableMap<RID, Int> = HashMap()
-    private val sharedLockTable: MutableMap<RID, MutableList<Int>> = HashMap()
+    private val mutExclusiveLockTable: MutableMap<RID, Int> = HashMap()
+    private val mutSharedLockTable: MutableMap<RID, MutableList<Int>> = HashMap()
+
+    val exclusiveLockTable: Map<RID, Int>
+        get() = mutExclusiveLockTable.toMap()
+
+    val sharedLockTable: Map<RID, List<Int>>
+        get() = mutSharedLockTable.toMap()
+
     fun lockShared(tx: TransactionImpl, rid: RID): Boolean {
         lock.lock()
         try {
-            val txNum = exclusiveLockTable[rid]
+            val txNum = mutExclusiveLockTable[rid]
             if (txNum != null) {
                 return txNum == tx.txNum
             }
-            val txList = sharedLockTable.getOrDefault(rid, mutableListOf())
+            val txList = mutSharedLockTable.getOrDefault(rid, mutableListOf())
             if (txList.contains(tx.txNum)) {
                 return true
             }
             txList.add(tx.txNum)
-            sharedLockTable[rid] = txList
+            mutSharedLockTable[rid] = txList
             tx.addSharedLockRID(rid)
             return true
         } finally {
@@ -31,18 +38,18 @@ class LockTable {
     fun lockExclusive(tx: TransactionImpl, rid: RID): Boolean {
         lock.lock()
         try {
-            val txNum = exclusiveLockTable[rid]
+            val txNum = mutExclusiveLockTable[rid]
             if (txNum != null) {
                 return txNum == tx.txNum
             }
-            val txList = sharedLockTable[rid]
-            if (txList != null) {
+            val txList = mutSharedLockTable[rid]
+            if (txList != null && txList.size > 0) {
                 if (!(txList.size == 1 && txList.first() == tx.txNum)) {
                     return false
                 }
             }
 
-            exclusiveLockTable[rid] = tx.txNum
+            mutExclusiveLockTable[rid] = tx.txNum
             tx.addExclusiveLockRID(rid)
             return true
         } finally {
@@ -54,10 +61,10 @@ class LockTable {
         lock.lock()
         try {
             ridList.forEach {
-                if (exclusiveLockTable[it] == tx.txNum) {
-                    exclusiveLockTable.remove(it)
+                if (mutExclusiveLockTable[it] == tx.txNum) {
+                    mutExclusiveLockTable.remove(it)
                 }
-                sharedLockTable[it]?.remove(tx.txNum)
+                mutSharedLockTable[it]?.remove(tx.txNum)
             }
         } finally {
             lock.unlock()

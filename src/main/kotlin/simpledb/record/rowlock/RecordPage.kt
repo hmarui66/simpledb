@@ -87,8 +87,8 @@ class RecordPage(private val tx: TransactionImpl, private val blk: BlockId, priv
         while (isValidSlot(slot)) {
             tx.rLatchPage(blk)
             try {
+                tx.lockShared(blk, slot)
                 if (tx.getInt(blk, offset(slot)) == used) {
-                    tx.lockShared(blk, slot)
                     return slot
                 }
             } finally {
