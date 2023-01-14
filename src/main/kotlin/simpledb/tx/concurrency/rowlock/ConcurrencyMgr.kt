@@ -2,6 +2,7 @@ package simpledb.tx.concurrency.rowlock
 
 import simpledb.file.BlockId
 import simpledb.record.RID
+import simpledb.tx.concurrency.LockAbortException
 import simpledb.tx.rowlock.TransactionImpl
 import simpledb.tx.concurrency.rowlock.LockTable as LockTableRowLock
 
@@ -40,11 +41,17 @@ class ConcurrencyMgr {
         }
     }
 
-    fun lockExclusive(tx: TransactionImpl, rid: RID): Boolean =
-        lockTblRowLock.lockExclusive(tx, rid)
+    fun lockExclusive(tx: TransactionImpl, rid: RID) {
+        if (!lockTblRowLock.lockExclusive(tx, rid)) {
+            throw LockAbortException()
+        }
+    }
 
-    fun lockShared(tx: TransactionImpl, rid: RID): Boolean =
-        lockTblRowLock.lockShared(tx, rid)
+    fun lockShared(tx: TransactionImpl, rid: RID) {
+        if (!lockTblRowLock.lockShared(tx, rid)) {
+            throw LockAbortException()
+        }
+    }
 
     companion object {
         private val lockTblRowLock = LockTableRowLock()

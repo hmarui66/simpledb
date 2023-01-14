@@ -18,9 +18,9 @@ class TransactionImpl(private val fm: FileMgr, lm: LogMgr?, private val bm: Buff
     private val mutSharedLockRIDs = mutableListOf<RID>()
     private val mutExclusiveLockRIDs = mutableListOf<RID>()
 
-    val sharedLockRIDs : List<RID>
+    val sharedLockRIDs: List<RID>
         get() = mutSharedLockRIDs.toList()
-    val exclusiveLockRIDs : List<RID>
+    val exclusiveLockRIDs: List<RID>
         get() = mutExclusiveLockRIDs.toList()
 
     init {
@@ -112,11 +112,13 @@ class TransactionImpl(private val fm: FileMgr, lm: LogMgr?, private val bm: Buff
         return bm.available()
     }
 
-    fun lockShared(blk: BlockId, slot: Int): Boolean =
+    fun lockShared(blk: BlockId, slot: Int) {
         concurMgr.lockShared(this, getRid(blk, slot))
+    }
 
-    fun lockExclusive(blk: BlockId, slot: Int): Boolean =
+    fun lockExclusive(blk: BlockId, slot: Int) {
         concurMgr.lockExclusive(this, getRid(blk, slot))
+    }
 
     fun rLatchPage(blk: BlockId) {
         concurMgr.rLatchPage(blk)

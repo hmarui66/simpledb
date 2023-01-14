@@ -5,9 +5,11 @@ import org.hamcrest.Matchers.`is`
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import simpledb.record.Layout
 import simpledb.record.Schema
 import simpledb.server.SimpleDB
+import simpledb.tx.concurrency.LockAbortException
 import simpledb.tx.rowlock.TransactionImpl
 import java.io.File
 import kotlin.concurrent.thread
@@ -137,33 +139,29 @@ class TableScanTest {
 
             // check read and write first row
             assertThat(ts.next(), `is`(true))
-            assertThat(ts.setString("B", "new b value"), `is`(false))
-
-            while (ts.next()) {
-                assertThat(ts.setString("B", "new b value"), `is`(false))
-            }
-
-            tsByOtherTx.close()
-            otherTx.rollback()
-
-            ts.beforeFirst()
-
-            // check read and write first row
-            assertThat(ts.next(), `is`(true))
-            assertThat(ts.setString("B", "new b value"), `is`(true))
-            while (ts.next()) {
-                assertThat(ts.setString("B", "new b value"), `is`(true))
-            }
-
-            ts.beforeFirst()
-            idx = 0
-            while (ts.next()) {
-                assertThat(ts.getInt("A"), `is`(aValues[idx++]))
-                assertThat(ts.getString("B"), `is`("new b value"))
+            assertThrows<LockAbortException> {
+                ts.setString("B", "new b value")
             }
 
             ts.close()
             tx.rollback()
+
+            tsByOtherTx.close()
+            otherTx.rollback()
+
+            val tx2 = TransactionImpl(db.fileMgr(), db.logMgr(), db.bufferMgr())
+            val ts2 = TableScan(tx2, "T", layout)
+            ts2.beforeFirst()
+
+            // check read and write first row
+            assertThat(ts2.next(), `is`(true))
+            assertThat(ts2.setString("B", "new b value"), `is`(true))
+            while (ts2.next()) {
+                assertThat(ts2.setString("B", "new b value"), `is`(true))
+            }
+
+            ts2.close()
+            tx2.rollback()
         }
 
         @Test
@@ -180,21 +178,27 @@ class TableScanTest {
             val tx = TransactionImpl(db.fileMgr(), db.logMgr(), db.bufferMgr())
             val ts = TableScan(tx, "T", layout)
             ts.beforeFirst()
-            assertThat(ts.next(), `is`(false))
+            assertThrows<LockAbortException> {
+                assertThat(ts.next(), `is`(false))
+            }
+            ts.close()
+            tx.rollback()
 
             // commit by otherTx
             tsByOtherTx.close()
             otherTx.commit()
 
-            ts.beforeFirst()
+            val tx2 = TransactionImpl(db.fileMgr(), db.logMgr(), db.bufferMgr())
+            val ts2 = TableScan(tx2, "T", layout)
+
             var idx = 0
-            while (ts.next()) {
-                assertThat(ts.getInt("A"), `is`(aValues[idx++]))
-                assertThat(ts.getString("B"), `is`("new b value"))
+            while (ts2.next()) {
+                assertThat(ts2.getInt("A"), `is`(aValues[idx++]))
+                assertThat(ts2.getString("B"), `is`("new b value"))
             }
 
-            ts.close()
-            tx.rollback()
+            ts2.close()
+            tx2.rollback()
         }
     }
 }
