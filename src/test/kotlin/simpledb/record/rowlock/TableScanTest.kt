@@ -3,6 +3,7 @@ package simpledb.record.rowlock
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.`is`
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -165,6 +166,32 @@ class TableScanTest {
         }
 
         @Test
+        fun setStringSucceedWhenSLockNotAcquiredByOtherTx() {
+            val otherTx = TransactionImpl(db.fileMgr(), db.logMgr(), db.bufferMgr())
+            val tsByOtherTx = TableScan(otherTx, "T", layout)
+            tsByOtherTx.beforeFirst()
+
+            // read and lock shared first record
+            tsByOtherTx.next()
+
+            val tx = TransactionImpl(db.fileMgr(), db.logMgr(), db.bufferMgr())
+            val ts = TableScan(tx, "T", layout)
+            ts.beforeFirst()
+            // proceed to 2nd row
+            ts.next()
+            ts.next()
+
+            assertThat(ts.getInt("A"), `is`(5))
+            assertThat(ts.setString("B", "new value of 5"), `is`(true))
+
+            ts.close()
+            tx.rollback()
+
+            tsByOtherTx.close()
+            otherTx.rollback()
+        }
+
+        @Test
         fun nextSucceedWhenXLockAcquiredAndReleasedByOtherTx() {
             val otherTx = TransactionImpl(db.fileMgr(), db.logMgr(), db.bufferMgr())
             val tsByOtherTx = TableScan(otherTx, "T", layout)
@@ -179,7 +206,7 @@ class TableScanTest {
             val ts = TableScan(tx, "T", layout)
             ts.beforeFirst()
             assertThrows<LockAbortException> {
-                assertThat(ts.next(), `is`(false))
+                ts.next()
             }
             ts.close()
             tx.rollback()
@@ -199,6 +226,214 @@ class TableScanTest {
 
             ts2.close()
             tx2.rollback()
+        }
+    }
+
+    @Nested
+    @DisplayName("Confirm that phantom read does not occur when inserting into an unused slot")
+    inner class Concurrent2 {
+        private lateinit var db: SimpleDB
+
+        @BeforeEach
+        fun before() {
+            db = SimpleDB("dbdir/tableScanTest", 400, 8)
+            var tx = TransactionImpl(db.fileMgr(), db.logMgr(), db.bufferMgr())
+
+            var ts = TableScan(tx, "T", layout)
+
+            // insert operation
+            ts.beforeFirst()
+            ts.insert()
+            ts.setInt("A", 1)
+            ts.setString("B", "value of 1")
+            ts.close()
+            tx.commit()
+
+            tx = TransactionImpl(db.fileMgr(), db.logMgr(), db.bufferMgr())
+
+            ts = TableScan(tx, "T", layout)
+
+            // delete operation
+            ts.beforeFirst()
+            ts.next()
+            ts.delete()
+            ts.close()
+            tx.commit()
+        }
+
+        @Test
+        fun cannotFetchDeletedRow() {
+            val tx = TransactionImpl(db.fileMgr(), db.logMgr(), db.bufferMgr())
+            val ts = TableScan(tx, "T", layout)
+            ts.beforeFirst()
+            assertThat(ts.next(), `is`(false))
+
+            ts.close()
+            tx.rollback()
+        }
+
+        @Test
+        fun nextFailWhenNewRowInsertedByOtherTx() {
+            // insert to unused row
+            val otherTx = TransactionImpl(db.fileMgr(), db.logMgr(), db.bufferMgr())
+            val tsByOtherTx = TableScan(otherTx, "T", layout)
+            tsByOtherTx.beforeFirst()
+            tsByOtherTx.insert()
+            tsByOtherTx.setInt("A", 1)
+            tsByOtherTx.setString("B", "new value of 1")
+
+            val tx = TransactionImpl(db.fileMgr(), db.logMgr(), db.bufferMgr())
+            val ts = TableScan(tx, "T", layout)
+            ts.beforeFirst()
+            assertThrows<LockAbortException> {
+                ts.next()
+            }
+
+            ts.close()
+            tx.rollback()
+
+            tsByOtherTx.close()
+            otherTx.rollback()
+        }
+
+        @Test
+        fun nextSucceedWhenNewRowInsertedAndCommittedByOtherTx() {
+            // insert to unused row
+            val otherTx = TransactionImpl(db.fileMgr(), db.logMgr(), db.bufferMgr())
+            val tsByOtherTx = TableScan(otherTx, "T", layout)
+            tsByOtherTx.beforeFirst()
+            tsByOtherTx.insert()
+            tsByOtherTx.setInt("A", 1)
+            tsByOtherTx.setString("B", "new value of 1")
+
+            tsByOtherTx.close()
+            otherTx.commit()
+
+            val tx = TransactionImpl(db.fileMgr(), db.logMgr(), db.bufferMgr())
+            val ts = TableScan(tx, "T", layout)
+            ts.beforeFirst()
+            assertThat(ts.next(), `is`(true))
+            assertThat(ts.getInt("A"), `is`(1))
+            assertThat(ts.getString("B"), `is`("new value of 1"))
+
+            ts.close()
+            tx.rollback()
+        }
+    }
+
+    @Nested
+    @DisplayName("Confirm that phantom read does not occur when inserting into a page at end of file")
+    inner class Concurrent3 {
+        private lateinit var db: SimpleDB
+
+        @BeforeEach
+        fun before() {
+            // set block size to hold only 1 slot
+            db = SimpleDB("dbdir/tableScanTest", 50, 8)
+            val tx = TransactionImpl(db.fileMgr(), db.logMgr(), db.bufferMgr())
+            val ts = TableScan(tx, "T", layout)
+
+            // insert operation
+            ts.beforeFirst()
+            ts.insert()
+            ts.setInt("A", 1)
+            ts.setString("B", "value of 1")
+            ts.close()
+            tx.commit()
+        }
+
+        @Test
+        fun insertFailWhenTableScanOpenedByOtherTx() {
+            val otherTx = TransactionImpl(db.fileMgr(), db.logMgr(), db.bufferMgr())
+            val tsByOtherTx = TableScan(otherTx, "T", layout)
+
+            // insert into new end of file page
+            val tx = TransactionImpl(db.fileMgr(), db.logMgr(), db.bufferMgr())
+            val ts = TableScan(tx, "T", layout)
+            ts.beforeFirst()
+            assertThrows<LockAbortException> {
+                ts.insert()
+            }
+
+            tsByOtherTx.close()
+            otherTx.rollback()
+
+            tx.rollback()
+        }
+
+        @Test
+        fun insertSucceedWhenTableScanOpenedAndClosedByOtherTx() {
+            val otherTx = TransactionImpl(db.fileMgr(), db.logMgr(), db.bufferMgr())
+            val tsByOtherTx = TableScan(otherTx, "T", layout)
+            tsByOtherTx.close()
+            otherTx.rollback()
+
+            // insert into new end of file page
+            val tx = TransactionImpl(db.fileMgr(), db.logMgr(), db.bufferMgr())
+            val ts = TableScan(tx, "T", layout)
+            ts.beforeFirst()
+            ts.insert()
+            ts.setInt("A", 5)
+            ts.setString("B", "value of 5")
+
+            ts.beforeFirst()
+            assertThat(ts.next(), `is`(true))
+            assertThat(ts.getInt("A"), `is`(1))
+            assertThat(ts.getString("B"), `is`("value of 1"))
+            assertThat(ts.next(), `is`(true))
+            assertThat(ts.getInt("A"), `is`(5))
+            assertThat(ts.getString("B"), `is`("value of 5"))
+
+            ts.close()
+            tx.commit()
+        }
+
+        @Test
+        fun openTableScanFailWhenNewRowInsertedByOtherTx() {
+            // insert to unused row
+            val otherTx = TransactionImpl(db.fileMgr(), db.logMgr(), db.bufferMgr())
+            val tsByOtherTx = TableScan(otherTx, "T", layout)
+            tsByOtherTx.beforeFirst()
+            tsByOtherTx.insert()
+            tsByOtherTx.setInt("A", 5)
+            tsByOtherTx.setString("B", "value of 5")
+
+            val tx = TransactionImpl(db.fileMgr(), db.logMgr(), db.bufferMgr())
+            assertThrows<LockAbortException> {
+                TableScan(tx, "T", layout)
+            }
+
+            tsByOtherTx.close()
+            otherTx.commit()
+
+            tx.rollback()
+        }
+
+        @Test
+        fun nextSucceedWhenNewRowInsertedAndCommittedByOtherTx() {
+            // insert to unused row
+            val otherTx = TransactionImpl(db.fileMgr(), db.logMgr(), db.bufferMgr())
+            val tsByOtherTx = TableScan(otherTx, "T", layout)
+            tsByOtherTx.beforeFirst()
+            tsByOtherTx.insert()
+            tsByOtherTx.setInt("A", 5)
+            tsByOtherTx.setString("B", "value of 5")
+
+            tsByOtherTx.close()
+            otherTx.commit()
+
+            val tx = TransactionImpl(db.fileMgr(), db.logMgr(), db.bufferMgr())
+            val ts = TableScan(tx, "T", layout)
+            ts.beforeFirst()
+            assertThat(ts.next(), `is`(true))
+            assertThat(ts.getInt("A"), `is`(1))
+            assertThat(ts.getString("B"), `is`("value of 1"))
+            assertThat(ts.next(), `is`(true))
+            assertThat(ts.getInt("A"), `is`(5))
+            assertThat(ts.getString("B"), `is`("value of 5"))
+
+            ts.close()
+            tx.rollback()
         }
     }
 }
