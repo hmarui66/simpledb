@@ -6,6 +6,7 @@ import simpledb.log.LogMgr;
 import simpledb.metadata.MetadataMgr;
 import simpledb.plan.*;
 import simpledb.tx.Transaction;
+import simpledb.tx.pagelock.TransactionImpl;
 
 import java.io.File;
 
@@ -29,7 +30,7 @@ public class SimpleDB {
 
     public SimpleDB(String dirname) {
         this(dirname, BLOCK_SIZE, BUFFER_SIZE);
-        Transaction tx = new Transaction(fm, lm, bm);
+        Transaction tx = new TransactionImpl(fm, lm, bm);
         boolean isNew = fm.isNew();
         if (isNew)
             System.out.println("creating new database");
@@ -57,7 +58,7 @@ public class SimpleDB {
     }
 
     public Transaction newTx() {
-        return new Transaction(fm, lm, bm);
+        return new TransactionImpl(fm, lm, bm);
     }
 
     public Planner planner() {

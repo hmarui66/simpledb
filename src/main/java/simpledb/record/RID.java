@@ -21,6 +21,12 @@ public class RID {
         return blknum == r.blknum && slot == r.slot;
     }
 
+    public int hashCode() {
+        int result = blknum;
+        result = 31 * result + slot;
+        return result;
+    }
+
     public String toString() {
         return "[" + blknum + ", " + slot + "]";
     }
