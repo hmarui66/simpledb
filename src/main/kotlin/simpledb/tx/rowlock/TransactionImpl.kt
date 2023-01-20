@@ -88,6 +88,7 @@ class TransactionImpl(private val fm: FileMgr, lm: LogMgr?, private val bm: Buff
         val dummyBlk = BlockId(filename, END_OF_FILE)
         concurMgr.rLatchPage(dummyBlk)
         try {
+            lockShared(dummyBlk, 0)
             return fm.length(filename)
         } finally {
             concurMgr.rUnlatchPage(dummyBlk)
@@ -98,6 +99,7 @@ class TransactionImpl(private val fm: FileMgr, lm: LogMgr?, private val bm: Buff
         val dummyBlk = BlockId(filename, END_OF_FILE)
         concurMgr.wLatchPage(dummyBlk)
         try {
+            lockExclusive(dummyBlk, 0)
             return fm.append(filename)
         } finally {
             concurMgr.wUnlatchPage(dummyBlk)
