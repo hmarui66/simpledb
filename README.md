@@ -25,6 +25,8 @@ SQL> select A, B from T1 where A = 1;
 
 - implement row locking
   - ["Database Design and Implementation" の SimpleDB に行ロックを実装](https://zenn.dev/hmarui66/scraps/d0f20edd53046b)
+- implement B-Tree
+  - https://github.com/hmarui66/simpledb/pull/3
 
 ## notes
 
